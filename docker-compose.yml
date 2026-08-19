@@ -1,0 +1,69 @@
+# services:
+#   mysql:
+#     image: mysql:8.0
+#     container_name: dbops_mysql
+#     restart: unless-stopped
+#     environment:
+#       MYSQL_ROOT_PASSWORD: rootpass
+#       MYSQL_DATABASE: ledger_lab
+#       MYSQL_USER: ledger_user
+#       MYSQL_PASSWORD: ledger_pass
+#     ports:
+#       - "3306:3306"
+#     volumes:
+#       - dbops_mysql_data:/var/lib/mysql
+#     networks:
+#       - dbops-network
+
+# volumes:
+#   dbops_mysql_data:
+
+# networks:
+#   dbops-network:
+#     driver: bridge
+
+# one primary, one replica
+services:
+  mysql-primary:
+    image: mysql:8.0
+    container_name: dbops_mysql_primary
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: ledger_lab
+    command:
+      - --server-id=1 # every instance in a replication setup needs a unique ID
+      - --log-bin=mysql-bin # turns on the binlog with that filename prefix. Without this flag, the primary keeps no change history at all, and there's nothing for a replica to stream.
+      - --gtid-mode=ON # more of a like a bookmark or offset for the replica to be aware where to resume tracking from.
+      - --enforce-gtid-consistency=ON
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbops_primary_data:/var/lib/mysql
+    networks:
+      - dbops-network
+
+  mysql-replica:
+    image: mysql:8.0
+    container_name: dbops_mysql_replica
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+    command:
+      - --server-id=2
+      - --gtid-mode=ON
+      - --enforce-gtid-consistency=ON
+    ports:
+      - "3307:3306"
+    volumes:
+      - dbops_replica_data:/var/lib/mysql
+    networks:
+      - dbops-network
+
+volumes:
+  dbops_primary_data:
+  dbops_replica_data:
+
+networks:
+  dbops-network:
+    driver: bridge
