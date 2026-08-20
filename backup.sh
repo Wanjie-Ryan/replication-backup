@@ -1,5 +1,5 @@
 #!/bin/bash
-# backup.sh — dumps ledger_lab from the dbops_mysql container to a timestamped file
+# backup.sh — dumps ledger_lab from the dbops_mysql container to a timestamped file.
 
 TIMESTAMP=$(date +%F_%H%M)
 BACKUP_DIR="/home/wanjie/db-ops/backups"
